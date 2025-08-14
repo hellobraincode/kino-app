@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -42,10 +42,11 @@ export type MovieFormState = {
 
 interface AdminMovieFormProps {
   movie?: Movie | null;
-  onStateChange: (state: MovieFormState) => void;
+  onFormSuccess: () => void;
+  onCancel: () => void;
 }
 
-export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
+export function AdminMovieForm({ movie, onFormSuccess, onCancel }: AdminMovieFormProps) {
   const { toast } = useToast();
   const [formState, setFormState] = useState<MovieFormState>({ status: 'idle' });
 
@@ -60,12 +61,21 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
       isPublished: movie?.isPublished || false,
     },
   });
-
-  const notifyStateChange = useCallback(onStateChange, []);
   
   useEffect(() => {
-    notifyStateChange(formState);
-  }, [formState, notifyStateChange]);
+    form.reset({
+      title: movie?.title || '',
+      description: movie?.description || '',
+      year: movie?.year || new Date().getFullYear(),
+      duration: movie?.duration || 0,
+      genres: movie?.genres?.join(', ') || '',
+      isPublished: movie?.isPublished || false,
+      thumbnailFile: undefined,
+      videoFile: undefined,
+    });
+    setFormState({ status: 'idle' });
+  }, [movie, form]);
+
 
   const uploadFile = (file: File, path: string, onProgress: (progress: number) => void): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -146,6 +156,7 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
 
       setFormState({ status: 'success' });
       form.reset();
+      onFormSuccess();
 
     } catch (error) {
       console.error("Form submission error:", error);
@@ -307,7 +318,7 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
             )}
           </CardContent>
           <CardFooter className="flex justify-end gap-2 pt-6">
-            <Button type="button" variant="outline" onClick={() => onStateChange({status: 'idle'})} disabled={isLoading}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
               <X className="mr-2 h-4 w-4"/> Цуцлах
             </Button>
             <Button type="submit" disabled={isLoading}>

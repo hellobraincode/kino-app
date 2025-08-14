@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -103,12 +104,11 @@ export default function AdminMoviesPage() {
         }
     };
 
-    const onFormStateChange = (state: MovieFormState) => {
-        if (state.status === 'success' || state.status === 'idle') {
-            setIsFormOpen(false);
-            setSelectedMovie(null);
-        }
+    const handleFormSuccess = () => {
+        setIsFormOpen(false);
+        setSelectedMovie(null);
     };
+
 
     return (
         <div className="space-y-8">
@@ -124,7 +124,7 @@ export default function AdminMoviesPage() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-3xl">
-                        <AdminMovieForm movie={selectedMovie} onStateChange={onFormStateChange} />
+                        <AdminMovieForm movie={selectedMovie} onFormSuccess={handleFormSuccess} onCancel={() => setIsFormOpen(false)} />
                     </DialogContent>
                 </Dialog>
             </div>
