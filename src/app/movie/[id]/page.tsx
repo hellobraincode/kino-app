@@ -15,6 +15,7 @@ import type { Movie } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function MovieDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
@@ -23,7 +24,7 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
     const fetchMovie = async () => {
       setLoading(true);
       try {
-        const docRef = doc(db, "movies", params.id);
+        const docRef = doc(db, "movies", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           setMovie({ id: docSnap.id, ...docSnap.data() } as Movie);
@@ -37,8 +38,10 @@ export default function MovieDetailPage({ params }: { params: { id: string } }) 
       }
     };
 
-    fetchMovie();
-  }, [params.id]);
+    if (id) {
+        fetchMovie();
+    }
+  }, [id]);
 
   const isMember = user?.role === 'member' || user?.role === 'admin';
 
