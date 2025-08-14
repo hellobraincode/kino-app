@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,11 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Save, Upload, Loader2, X } from "lucide-react";
+import { Save, Loader2, X } from "lucide-react";
 import { db, storage } from '@/lib/firebase';
 import { Movie } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from './ui/progress';
+import { Label } from './ui/label';
 
 const formSchema = z.object({
   title: z.string().min(1, { message: "Нэр хоосон байж болохгүй." }),
@@ -34,7 +35,7 @@ const formSchema = z.object({
 type MovieFormData = z.infer<typeof formSchema>;
 
 export type MovieFormState = {
-  status: 'idle' | 'loading' | 'uploading' | 'success' | 'error';
+  status: 'idle' | 'loading' | 'uploading-thumbnail' | 'uploading-video' | 'saving' | 'success' | 'error';
   message?: string;
   uploadProgress?: number;
 };
@@ -55,18 +56,18 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
       description: movie?.description || '',
       year: movie?.year || new Date().getFullYear(),
       duration: movie?.duration || 0,
-      genres: movie?.genres.join(', ') || '',
+      genres: movie?.genres?.join(', ') || '',
       isPublished: movie?.isPublished || false,
     },
   });
+
+  const notifyStateChange = useCallback(onStateChange, []);
   
-  const { isSubmitting, errors } = form.formState;
-
   useEffect(() => {
-    onStateChange(formState);
-  }, [formState, onStateChange]);
+    notifyStateChange(formState);
+  }, [formState, notifyStateChange]);
 
-  const uploadFile = (file: File, path: string): Promise<string> => {
+  const uploadFile = (file: File, path: string, onProgress: (progress: number) => void): Promise<string> => {
     return new Promise((resolve, reject) => {
       const storageRef = ref(storage, path);
       const uploadTask = uploadBytesResumable(storageRef, file);
@@ -75,7 +76,7 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
         'state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setFormState({ status: 'uploading', uploadProgress: progress });
+          onProgress(progress);
         },
         (error) => {
           console.error("Upload failed:", error);
@@ -101,34 +102,41 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
     try {
       let thumbnailUrl = movie?.thumbnailUrl || '';
       if (data.thumbnailFile) {
-        thumbnailUrl = await uploadFile(data.thumbnailFile, `movies/${Date.now()}_${data.thumbnailFile.name}`);
+        thumbnailUrl = await uploadFile(
+          data.thumbnailFile, 
+          `movies/thumbnails/${Date.now()}_${data.thumbnailFile.name}`,
+          (progress) => setFormState({ status: 'uploading-thumbnail', uploadProgress: progress })
+        );
       }
 
       let videoUrl = movie?.videoUrl || '';
       if (data.videoFile) {
-        videoUrl = await uploadFile(data.videoFile, `movies/${Date.now()}_${data.videoFile.name}`);
+        videoUrl = await uploadFile(
+          data.videoFile, 
+          `movies/videos/${Date.now()}_${data.videoFile.name}`,
+          (progress) => setFormState({ status: 'uploading-video', uploadProgress: progress })
+        );
       }
       
-      setFormState({ status: 'loading' });
+      setFormState({ status: 'saving' });
 
       const movieData = {
-        ...data,
+        title: data.title,
+        description: data.description,
+        year: data.year,
+        duration: data.duration,
         genres: data.genres.split(',').map(g => g.trim()),
+        isPublished: data.isPublished,
         thumbnailUrl,
         videoUrl,
         updatedAt: serverTimestamp(),
       };
-      
-      delete (movieData as any).thumbnailFile;
-      delete (movieData as any).videoFile;
 
       if (movie) {
-        // Update existing movie
         const movieRef = doc(db, 'movies', movie.id);
         await updateDoc(movieRef, movieData);
         toast({ title: 'Амжилттай шинэчлэгдлээ' });
       } else {
-        // Add new movie
         await addDoc(collection(db, 'movies'), {
           ...movieData,
           createdAt: serverTimestamp(),
@@ -146,7 +154,17 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
     }
   };
 
-  const isLoading = formState.status === 'loading' || formState.status === 'uploading';
+  const getLoadingMessage = () => {
+    switch (formState.status) {
+        case 'loading': return 'Бэлдэж байна...';
+        case 'uploading-thumbnail': return 'Thumbnail хуулж байна...';
+        case 'uploading-video': return 'Видео хуулж байна...';
+        case 'saving': return 'Хадгалж байна...';
+        default: return 'Хадгалах';
+    }
+  }
+
+  const isLoading = ['loading', 'uploading-thumbnail', 'uploading-video', 'saving'].includes(formState.status);
 
   return (
     <Card>
@@ -281,9 +299,9 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
                 </FormItem>
               )}
             />
-            {formState.status === 'uploading' && (
+            { (formState.status === 'uploading-thumbnail' || formState.status === 'uploading-video') && (
                 <div className='space-y-2'>
-                    <Label>Файл хуулж байна...</Label>
+                    <Label>{getLoadingMessage()}</Label>
                     <Progress value={formState.uploadProgress} />
                 </div>
             )}
@@ -294,7 +312,7 @@ export function AdminMovieForm({ movie, onStateChange }: AdminMovieFormProps) {
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              <Save className="mr-2 h-4 w-4" /> Хадгалах
+              {isLoading ? getLoadingMessage() : <><Save className="mr-2 h-4 w-4" /> Хадгалах</>}
             </Button>
           </CardFooter>
         </form>

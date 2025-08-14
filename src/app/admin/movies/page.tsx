@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AdminMovieForm, MovieFormState } from "@/components/admin-movie-form";
 import { PlusCircle, Edit, ToggleLeft, ToggleRight, Trash2, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -76,14 +76,22 @@ export default function AdminMoviesPage() {
 
             // Delete Thumbnail from Storage
             if (movie.thumbnailUrl) {
-                const thumbnailRef = ref(storage, movie.thumbnailUrl);
-                await deleteObject(thumbnailRef);
+                try {
+                    const thumbnailRef = ref(storage, movie.thumbnailUrl);
+                    await deleteObject(thumbnailRef);
+                } catch (e: any) {
+                    if (e.code !== 'storage/object-not-found') throw e;
+                }
             }
 
             // Delete Video from Storage
             if (movie.videoUrl) {
-                const videoRef = ref(storage, movie.videoUrl);
-                await deleteObject(videoRef);
+                 try {
+                    const videoRef = ref(storage, movie.videoUrl);
+                    await deleteObject(videoRef);
+                } catch (e: any) {
+                    if (e.code !== 'storage/object-not-found') throw e;
+                }
             }
 
             toast({ title: "Амжилттай", description: `"${movie.title}" кино устгагдлаа.` });
