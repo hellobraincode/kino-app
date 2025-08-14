@@ -1,7 +1,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { MovieCard } from '@/components/movie-card';
@@ -14,16 +14,26 @@ import type { Movie } from '@/lib/types';
 async function getMovies() {
   try {
     const moviesQuery = query(
-      collection(db, "movies"), 
-      where("isPublished", "==", true), 
+      collection(db, "movies"),
       orderBy("createdAt", "desc"),
-      limit(5)
+      limit(10) // Fetch more to ensure we get at least 5 published ones
     );
     const querySnapshot = await getDocs(moviesQuery);
-    const movies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
+    const movies = querySnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as Movie))
+      .filter(movie => movie.isPublished)
+      .slice(0, 5);
     return movies;
   } catch (error) {
     console.error("Error fetching movies: ", error);
+    // This might fail if the composite index is not created yet.
+    // As a fallback, let's try fetching without ordering if the primary query fails.
+    if ((error as any).code === 'failed-precondition') {
+        console.warn("Query failed due to missing index. Falling back to fetching published movies without specific order.");
+        const fallbackQuery = query(collection(db, "movies"), where("isPublished", "==", true), limit(5));
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
+    }
     return [];
   }
 }

@@ -10,14 +10,21 @@ async function getMovies() {
   try {
     const moviesQuery = query(
       collection(db, "movies"), 
-      where("isPublished", "==", true), 
       orderBy("createdAt", "desc")
     );
     const querySnapshot = await getDocs(moviesQuery);
-    const movies = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
+    const movies = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Movie))
+        .filter(movie => movie.isPublished);
     return movies;
   } catch (error) {
     console.error("Error fetching movies: ", error);
+     if ((error as any).code === 'failed-precondition') {
+        console.warn("Query failed due to missing index. Falling back to fetching all published movies without specific order.");
+        const fallbackQuery = query(collection(db, "movies"), where("isPublished", "==", true));
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
+    }
     return [];
   }
 }
