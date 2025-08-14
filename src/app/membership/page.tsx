@@ -11,7 +11,6 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ExternalLink, Loader2, Send } from 'lucide-react';
@@ -21,7 +20,6 @@ import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
 const formSchema = z.object({
-  messengerProfileUrl: z.string().url({ message: 'Messenger профайлын зөв URL оруулна уу.' }).min(1, { message: 'Энэ талбарыг бөглөнө үү.' }),
   note: z.string().optional(),
 });
 
@@ -39,7 +37,6 @@ export default function MembershipPage() {
   const form = useForm<MembershipFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      messengerProfileUrl: '',
       note: '',
     },
   });
@@ -74,7 +71,6 @@ export default function MembershipPage() {
       await addDoc(collection(db, "membership_requests"), {
         uid: user.uid,
         email: user.email,
-        messengerProfileUrl: values.messengerProfileUrl,
         note: values.note,
         status: 'pending',
         createdAt: serverTimestamp(),
@@ -151,7 +147,7 @@ export default function MembershipPage() {
                 <div className='space-y-4 p-6 border rounded-lg bg-background'>
                     <h3 className='font-bold text-lg text-primary text-center'>Алхам 2: Хүсэлт илгээх</h3>
                     <p className="text-muted-foreground text-center">
-                        Төлбөрөө төлсний дараа өөрийн Facebook Messenger хаягийн холбоос болон бусад мэдээллийг доорх формд бөглөж илгээнэ үү.
+                        Төлбөрөө төлсний дараа доорх товчийг дарж хүсэлтээ илгээнэ үү. Бид таны имэйл хаягаар таньж, эрхийг тань нээх болно.
                     </p>
                     
                     { authLoading || checkingRequest ? (
@@ -169,25 +165,12 @@ export default function MembershipPage() {
                             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
                                 <FormField
                                     control={form.control}
-                                    name="messengerProfileUrl"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Messenger Profile URL</FormLabel>
-                                        <FormControl>
-                                        <Input placeholder="https://m.me/your.username" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
                                     name="note"
                                     render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Тэмдэглэл (заавал биш)</FormLabel>
                                         <FormControl>
-                                        <Textarea placeholder="Нэмэлт мэдээлэл..." {...field} />
+                                        <Textarea placeholder="Төлбөрийн мэдээлэл, дэлгэрэнгүй..." {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

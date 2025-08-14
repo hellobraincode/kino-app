@@ -5,7 +5,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, ExternalLink, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { db } from '@/lib/firebase';
 import type { MembershipRequest } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -37,6 +37,8 @@ export function AdminMembershipTable({ status }: AdminMembershipTableProps) {
                     reviewedAt: data.reviewedAt?.toDate(),
                 } as MembershipRequest);
             });
+            // Sort by creation date, newest first
+            fetchedRequests.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
             setRequests(fetchedRequests);
             setLoading(false);
         }, (error) => {
@@ -112,8 +114,8 @@ export function AdminMembershipTable({ status }: AdminMembershipTableProps) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Хэрэглэгчийн ID</TableHead>
-                        <TableHead>Messenger</TableHead>
+                        <TableHead>Хэрэглэгчийн имэйл</TableHead>
+                        <TableHead>Тэмдэглэл</TableHead>
                         <TableHead>Огноо</TableHead>
                         <TableHead className="text-center">Төлөв</TableHead>
                         {status === 'pending' && <TableHead className="text-right">Үйлдэл</TableHead>}
@@ -122,13 +124,8 @@ export function AdminMembershipTable({ status }: AdminMembershipTableProps) {
                 <TableBody>
                     {requests.map((req) => (
                         <TableRow key={req.id}>
-                            <TableCell className="font-medium truncate max-w-[150px]">{req.uid}</TableCell>
-                            <TableCell>
-                                <a href={req.messengerProfileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline">
-                                    Профайл
-                                    <ExternalLink className="h-3 w-3" />
-                                </a>
-                            </TableCell>
+                            <TableCell className="font-medium">{req.email}</TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">{req.note || '-'}</TableCell>
                             <TableCell>{req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                             <TableCell className="text-center">
                                 <Badge variant={getStatusVariant(req.status)}>

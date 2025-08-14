@@ -27,7 +27,7 @@ export interface User {
 export interface MembershipRequest {
   id: string;
   uid: string;
-  messengerProfileUrl: string;
+  email: string;
   note?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt?: any;
