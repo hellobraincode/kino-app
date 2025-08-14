@@ -14,8 +14,7 @@ import { useEffect, useState } from 'react';
 import type { Movie } from '@/lib/types';
 import { useAuth } from '@/hooks/use-auth';
 
-export default function MovieDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default function MovieDetailPage({ params: { id } }: { params: { id: string } }) {
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const { user, loading: authLoading } = useAuth();
