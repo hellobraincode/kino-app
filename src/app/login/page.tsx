@@ -10,6 +10,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,8 +19,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Film, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { User } from '@/lib/types';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Буруу имэйл хаяг байна.' }),
@@ -47,7 +50,20 @@ export default function LoginPage() {
         toast({ title: "Амжилттай нэвтэрлээ." });
         router.push('/');
       } else {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const user = userCredential.user;
+        
+        const newUser: User = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          role: 'guest', // Default role for new users
+          createdAt: serverTimestamp(),
+        };
+
+        await setDoc(doc(db, "users", user.uid), newUser);
+
         toast({ title: "Амжилттай бүртгүүллээ." });
         router.push('/');
       }

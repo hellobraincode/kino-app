@@ -1,7 +1,20 @@
+'use client';
+
 import Link from 'next/link';
-import { Film, LogIn, User, Menu } from 'lucide-react';
+import { Film, LogIn, LogOut, User, Menu, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/use-auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+
 
 const navLinks = [
   { href: '/browse', label: 'Бүх кино' },
@@ -9,8 +22,14 @@ const navLinks = [
 ];
 
 export function Header() {
-  const isAdmin = true; // Placeholder for auth state
-  const isLoggedIn = false; // Placeholder for auth state
+  const { user, loading, signOut } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  const isLoggedIn = !!user;
+
+  const getInitials = (email: string | null | undefined) => {
+    if (!email) return 'U';
+    return email.charAt(0).toUpperCase();
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -29,27 +48,54 @@ export function Header() {
               {link.label}
             </Link>
           ))}
-          {isAdmin && (
-             <Link
-              href="/admin"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Админ
-            </Link>
-          )}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
-           {isLoggedIn ? (
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-           ) : (
-            <Button asChild>
-              <Link href="/login">
-                <LogIn className="mr-2 h-4 w-4" /> Нэвтрэх
-              </Link>
-            </Button>
-           )}
+        <div className="ml-auto flex items-center gap-4">
+          {!loading && (
+            <>
+              {isLoggedIn ? (
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.photoURL || ''} alt={user.email || ''} />
+                          <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user.displayName || 'Хэрэглэгч'}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                       {isAdmin && (
+                        <DropdownMenuItem asChild>
+                           <Link href="/admin">
+                            <UserCog className="mr-2 h-4 w-4" />
+                            <span>Админ</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem onClick={signOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Гарах</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+              ) : (
+                <Button asChild>
+                  <Link href="/login">
+                    <LogIn className="mr-2 h-4 w-4" /> Нэвтрэх
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="md:hidden">
