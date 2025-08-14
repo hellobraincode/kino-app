@@ -1,43 +1,206 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { collection, addDoc, serverTimestamp, query, where, onSnapshot, DocumentData } from 'firebase/firestore';
+
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { ExternalLink, Loader2, Send } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import Link from 'next/link';
+
+const formSchema = z.object({
+  messengerProfileUrl: z.string().url({ message: 'Messenger профайлын зөв URL оруулна уу.' }).min(1, { message: 'Энэ талбарыг бөглөнө үү.' }),
+  note: z.string().optional(),
+});
+
+type MembershipFormData = z.infer<typeof formSchema>;
 
 export default function MembershipPage() {
+  const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [existingRequest, setExistingRequest] = useState<DocumentData | null>(null);
+  const [checkingRequest, setCheckingRequest] = useState(true);
+
   const YOUR_FB_PAGE_NAME = "MongolKino"; 
-  const { user } = useAuth();
+
+  const form = useForm<MembershipFormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      messengerProfileUrl: '',
+      note: '',
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      setCheckingRequest(true);
+      const q = query(collection(db, "membership_requests"), where("uid", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        if (!querySnapshot.empty) {
+            const request = querySnapshot.docs[0].data();
+            request.id = querySnapshot.docs[0].id;
+            setExistingRequest(request);
+        } else {
+            setExistingRequest(null);
+        }
+        setCheckingRequest(false);
+      });
+      return () => unsubscribe();
+    } else {
+       setCheckingRequest(false);
+    }
+  }, [user]);
+
+  const onSubmit = async (values: MembershipFormData) => {
+    if (!user) {
+      toast({ title: "Нэвтэрнэ үү", description: "Хүсэлт илгээхийн тулд та эхлээд нэвтрэх ёстой.", variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await addDoc(collection(db, "membership_requests"), {
+        uid: user.uid,
+        email: user.email,
+        messengerProfileUrl: values.messengerProfileUrl,
+        note: values.note,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+      toast({ title: 'Амжилттай', description: 'Таны гишүүнчлэлийн хүсэлтийг илгээлээ. Бид удахгүй шалгаад хариу мэдэгдэх болно.' });
+      form.reset();
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Алдаа", description: "Хүсэлт илгээхэд алдаа гарлаа. Дахин оролдоно уу.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderStatusMessage = () => {
+    if (!existingRequest) return null;
+
+    switch (existingRequest.status) {
+      case 'pending':
+        return (
+            <div className="text-center p-6 bg-blue-100/50 dark:bg-blue-900/20 rounded-lg">
+                <h3 className="font-bold text-lg text-primary">Таны хүсэлт хүлээгдэж байна</h3>
+                <p className="text-muted-foreground mt-2">Бид таны хүсэлтийг шалгаж байна. Баталгаажуулсны дараа таны эрх идэвхжих болно.</p>
+            </div>
+        );
+      case 'approved':
+        return (
+            <div className="text-center p-6 bg-green-100/50 dark:bg-green-900/20 rounded-lg">
+                <h3 className="font-bold text-lg text-green-700 dark:text-green-400">Та гишүүн боллоо!</h3>
+                <p className="text-muted-foreground mt-2">Манай бүх киног хязгааргүй үзэх боломжтой боллоо.</p>
+                <Button asChild className='mt-4'>
+                    <Link href="/browse">Кинонууд үзэх</Link>
+                </Button>
+            </div>
+        );
+       case 'rejected':
+         return (
+            <div className="text-center p-6 bg-red-100/50 dark:bg-red-900/20 rounded-lg">
+                <h3 className="font-bold text-lg text-destructive">Таны хүсэлт татгалзсан</h3>
+                <p className="text-muted-foreground mt-2">Харамсалтай нь таны хүсэлт татгалзсан байна. Дэлгэрэнгүй мэдээллийг манай Facebook хуудсаар холбогдож авна уу.</p>
+            </div>
+        );
+      default:
+        return null;
+    }
+  };
 
 
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1 bg-secondary">
-        <div className="container flex min-h-[calc(100vh-12rem)] items-center justify-center py-12 md:py-20">
-          <Card className="w-full max-w-lg shadow-lg">
+        <div className="container flex items-center justify-center py-12 md:py-20">
+          <Card className="w-full max-w-2xl shadow-lg">
              <CardHeader>
                 <CardTitle className="text-center text-3xl font-headline">Гишүүн болох</CardTitle>
                 <CardDescription className="text-center">
                     Манай вэб сайтын гишүүн болж, бүх киног хязгааргүй үзэх боломжийг нээгээрэй.
                 </CardDescription>
               </CardHeader>
-              <CardContent className='space-y-4 text-center'>
-                 <p className="text-muted-foreground">
-                    Гишүүнчлэлийн төлбөр болон бусад мэдээллийг авахын тулд манай Facebook хуудсанд мессеж бичнэ үү.
-                    Таны хүсэлтийг бид шалгаж баталгаажуулсны дараа таны гишүүнчлэлийн эрх идэвхжих болно.
-                </p>
-                <p className='text-sm text-foreground'>
-                    Таны имэйл: <span className='font-bold'>{user?.email || "Нэвтэрнэ үү"}</span>
-                </p>
-                <Button asChild className='w-full' size="lg">
-                    <a href={`https://m.me/${YOUR_FB_PAGE_NAME}`} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="mr-2 h-4 w-4" /> Facebook-ээр мессеж бичих
-                    </a>
-                </Button>
+              <CardContent className='space-y-8'>
+                <div className='space-y-4 text-center p-6 border rounded-lg bg-background'>
+                    <h3 className='font-bold text-lg text-primary'>Алхам 1: Төлбөр төлөх</h3>
+                    <p className="text-muted-foreground">
+                        Гишүүнчлэлийн төлбөр болон бусад мэдээллийг авахын тулд манай Facebook хуудсанд мессеж бичнэ үү.
+                    </p>
+                    <Button asChild size="lg">
+                        <a href={`https://m.me/${YOUR_FB_PAGE_NAME}`} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-2 h-4 w-4" /> Facebook-ээр холбогдох
+                        </a>
+                    </Button>
+                </div>
+
+                <div className='space-y-4 p-6 border rounded-lg bg-background'>
+                    <h3 className='font-bold text-lg text-primary text-center'>Алхам 2: Хүсэлт илгээх</h3>
+                    <p className="text-muted-foreground text-center">
+                        Төлбөрөө төлсний дараа өөрийн Facebook Messenger хаягийн холбоос болон бусад мэдээллийг доорх формд бөглөж илгээнэ үү.
+                    </p>
+                    
+                    { authLoading || checkingRequest ? (
+                         <div className="flex justify-center items-center h-40">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        </div>
+                    ) : !user ? (
+                        <div className="text-center text-muted-foreground p-8">
+                            Хүсэлт илгээхийн тулд <Link href="/login" className="text-primary underline">нэвтэрнэ</Link> үү.
+                        </div>
+                    ) : existingRequest ? (
+                        renderStatusMessage()
+                    ) : (
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+                                <FormField
+                                    control={form.control}
+                                    name="messengerProfileUrl"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Messenger Profile URL</FormLabel>
+                                        <FormControl>
+                                        <Input placeholder="https://m.me/your.username" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="note"
+                                    render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Тэмдэглэл (заавал биш)</FormLabel>
+                                        <FormControl>
+                                        <Textarea placeholder="Нэмэлт мэдээлэл..." {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    <Send className="mr-2 h-4 w-4" /> Хүсэлт илгээх
+                                </Button>
+                            </form>
+                        </Form>
+                    )}
+                </div>
               </CardContent>
           </Card>
         </div>
