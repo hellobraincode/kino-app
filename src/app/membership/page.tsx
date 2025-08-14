@@ -11,17 +11,14 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ExternalLink, Loader2, Send } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 
-const formSchema = z.object({
-  note: z.string().optional(),
-});
+const formSchema = z.object({});
 
 type MembershipFormData = z.infer<typeof formSchema>;
 
@@ -36,9 +33,7 @@ export default function MembershipPage() {
 
   const form = useForm<MembershipFormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      note: '',
-    },
+    defaultValues: {},
   });
 
   useEffect(() => {
@@ -71,7 +66,6 @@ export default function MembershipPage() {
       await addDoc(collection(db, "membership_requests"), {
         uid: user.uid,
         email: user.email,
-        note: values.note,
         status: 'pending',
         createdAt: serverTimestamp(),
       });
@@ -132,26 +126,14 @@ export default function MembershipPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-8'>
-                <div className='space-y-4 text-center p-6 border rounded-lg bg-background'>
-                    <h3 className='font-bold text-lg text-primary'>Алхам 1: Төлбөр төлөх</h3>
-                    <p className="text-muted-foreground">
-                        Гишүүнчлэлийн төлбөр болон бусад мэдээллийг авахын тулд манай Facebook хуудсанд мессеж бичнэ үү.
-                    </p>
-                    <Button asChild size="lg">
-                        <a href={`https://m.me/${YOUR_FB_PAGE_NAME}`} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="mr-2 h-4 w-4" /> Facebook-ээр холбогдох
-                        </a>
-                    </Button>
-                </div>
-
                 <div className='space-y-4 p-6 border rounded-lg bg-background'>
-                    <h3 className='font-bold text-lg text-primary text-center'>Алхам 2: Хүсэлт илгээх</h3>
+                    <h3 className='font-bold text-lg text-primary text-center'>Алхам 1: Хүсэлт илгээх</h3>
                     <p className="text-muted-foreground text-center">
-                        Төлбөрөө төлсний дараа доорх товчийг дарж хүсэлтээ илгээнэ үү. Бид таны имэйл хаягаар таньж, эрхийг тань нээх болно.
+                        Эхлээд доорх товчийг дарж гишүүн болох хүсэлтээ илгээнэ үү.
                     </p>
                     
                     { authLoading || checkingRequest ? (
-                         <div className="flex justify-center items-center h-40">
+                         <div className="flex justify-center items-center h-24">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         </div>
                     ) : !user ? (
@@ -163,19 +145,6 @@ export default function MembershipPage() {
                     ) : (
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-                                <FormField
-                                    control={form.control}
-                                    name="note"
-                                    render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Тэмдэглэл (заавал биш)</FormLabel>
-                                        <FormControl>
-                                        <Textarea placeholder="Төлбөрийн мэдээлэл, дэлгэрэнгүй..." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                    )}
-                                />
                                 <Button type="submit" className="w-full" disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                     <Send className="mr-2 h-4 w-4" /> Хүсэлт илгээх
@@ -183,6 +152,17 @@ export default function MembershipPage() {
                             </form>
                         </Form>
                     )}
+                </div>
+                <div className='space-y-4 text-center p-6 border rounded-lg bg-background'>
+                    <h3 className='font-bold text-lg text-primary'>Алхам 2: Төлбөр төлөх</h3>
+                    <p className="text-muted-foreground">
+                        Хүсэлтээ илгээсний дараа гишүүнчлэлийн төлбөр болон бусад мэдээллийг авахын тулд манай Facebook хуудсанд мессеж бичнэ үү.
+                    </p>
+                    <Button asChild size="lg">
+                        <a href={`https://m.me/${YOUR_FB_PAGE_NAME}`} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-2 h-4 w-4" /> Facebook-ээр холбогдох
+                        </a>
+                    </Button>
                 </div>
               </CardContent>
           </Card>

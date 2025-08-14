@@ -115,7 +115,6 @@ export function AdminMembershipTable({ status }: AdminMembershipTableProps) {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Хэрэглэгчийн имэйл</TableHead>
-                        <TableHead>Тэмдэглэл</TableHead>
                         <TableHead>Огноо</TableHead>
                         <TableHead className="text-center">Төлөв</TableHead>
                         {status === 'pending' && <TableHead className="text-right">Үйлдэл</TableHead>}
@@ -125,7 +124,6 @@ export function AdminMembershipTable({ status }: AdminMembershipTableProps) {
                     {requests.map((req) => (
                         <TableRow key={req.id}>
                             <TableCell className="font-medium">{req.email}</TableCell>
-                            <TableCell className="text-muted-foreground max-w-xs truncate">{req.note || '-'}</TableCell>
                             <TableCell>{req.createdAt ? new Date(req.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
                             <TableCell className="text-center">
                                 <Badge variant={getStatusVariant(req.status)}>

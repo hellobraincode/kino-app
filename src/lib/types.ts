@@ -28,7 +28,6 @@ export interface MembershipRequest {
   id: string;
   uid: string;
   email: string;
-  note?: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt?: any;
   reviewedAt?: any;
