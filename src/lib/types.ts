@@ -1,3 +1,6 @@
+
+import { Timestamp } from "firebase/firestore";
+
 export interface Movie {
   id: string;
   title: string;
@@ -8,8 +11,8 @@ export interface Movie {
   thumbnailUrl: string;
   videoUrl: string;
   isPublished: boolean;
-  createdAt?: any;
-  updatedAt?: any;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
 }
 
 export interface User {
