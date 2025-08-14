@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { deleteObject, ref } from 'firebase/storage';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AdminMovieForm, MovieFormState } from "@/components/admin-movie-form";
 import { PlusCircle, Edit, ToggleLeft, ToggleRight, Trash2, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -124,6 +124,10 @@ export default function AdminMoviesPage() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>{selectedMovie ? 'Кино засах' : 'Кино нэмэх'}</DialogTitle>
+                            <DialogDescription>{selectedMovie ? 'Киноны мэдээллийг эндээс засаарай.' : 'Шинэ киноны мэдээллийг энд оруулна уу.'}</DialogDescription>
+                        </DialogHeader>
                         <AdminMovieForm movie={selectedMovie} onFormSuccess={handleFormSuccess} onCancel={() => setIsFormOpen(false)} />
                     </DialogContent>
                 </Dialog>

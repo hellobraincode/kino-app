@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -178,14 +179,9 @@ export function AdminMovieForm({ movie, onFormSuccess, onCancel }: AdminMovieFor
   const isLoading = ['loading', 'uploading-thumbnail', 'uploading-video', 'saving'].includes(formState.status);
 
   return (
-    <Card>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardHeader>
-            <CardTitle>{movie ? 'Кино засах' : 'Кино нэмэх'}</CardTitle>
-            <CardDescription>{movie ? 'Киноны мэдээллийг эндээс засаарай.' : 'Шинэ киноны мэдээллийг энд оруулна уу.'}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
+          <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto pr-4 pt-6">
             <FormField
               control={form.control}
               name="title"
@@ -328,6 +324,5 @@ export function AdminMovieForm({ movie, onFormSuccess, onCancel }: AdminMovieFor
           </CardFooter>
         </form>
       </Form>
-    </Card>
   );
 }
