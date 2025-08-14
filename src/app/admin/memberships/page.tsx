@@ -1,5 +1,6 @@
 import { AdminMembershipTable } from "@/components/admin-membership-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MembershipRequest } from "@/lib/types";
 
 export default function AdminMembershipsPage() {
     return (
@@ -15,13 +16,13 @@ export default function AdminMembershipsPage() {
                     <TabsTrigger value="rejected">Татгалзсан</TabsTrigger>
                 </TabsList>
                 <TabsContent value="pending">
-                    <AdminMembershipTable />
+                    <AdminMembershipTable status="pending" />
                 </TabsContent>
                 <TabsContent value="approved">
-                    <AdminMembershipTable />
+                    <AdminMembershipTable status="approved" />
                 </TabsContent>
                 <TabsContent value="rejected">
-                    <AdminMembershipTable />
+                    <AdminMembershipTable status="rejected" />
                 </TabsContent>
             </Tabs>
         </div>
