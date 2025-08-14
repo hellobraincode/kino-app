@@ -1,9 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Movie } from '@/lib/types';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { PlayCircle } from 'lucide-react';
 
 interface MovieCardProps {
   movie: Movie;
@@ -11,10 +10,10 @@ interface MovieCardProps {
 
 export function MovieCard({ movie }: MovieCardProps) {
   return (
-    <Link href={`/movie/${movie.id}`} className="group block">
-      <Card className="overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-xl group-hover:-translate-y-1">
-        <div className="relative aspect-[2/3]">
-          <Image
+    <Link href={`/movie/${movie.id}`} className="group block overflow-hidden rounded-lg">
+      <Card className="overflow-hidden transition-all duration-300 ease-in-out border-0 bg-transparent">
+        <div className="relative aspect-[2/3] w-full">
+           <Image
             src={movie.thumbnailUrl}
             alt={movie.title}
             fill
@@ -22,26 +21,17 @@ export function MovieCard({ movie }: MovieCardProps) {
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             data-ai-hint="movie poster"
           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-start p-4">
+             <div className="flex items-center gap-2">
+                <PlayCircle className="h-8 w-8 text-white" />
+             </div>
+           </div>
         </div>
-        <CardContent className="p-4">
-          <h3 className="font-headline truncate text-lg font-bold leading-tight">{movie.title}</h3>
-          <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>{movie.year}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              <span>{movie.duration} мин</span>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-wrap gap-2 p-4 pt-0">
-          {movie.genres.slice(0, 3).map((genre) => (
-            <Badge key={genre} variant="secondary">{genre}</Badge>
-          ))}
-        </CardFooter>
       </Card>
+       <div className="mt-2">
+        <h3 className="font-semibold text-foreground truncate">{movie.title}</h3>
+        <p className="text-sm text-muted-foreground">{movie.year}</p>
+      </div>
     </Link>
   );
 }

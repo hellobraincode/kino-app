@@ -9,28 +9,25 @@ import { Button } from '@/components/ui/button';
 import { PlayCircle } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import type { Movie } from '@/lib/types';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 
 async function getMovies() {
   try {
     const moviesQuery = query(
       collection(db, "movies"),
-      orderBy("createdAt", "desc"),
-      limit(10) // Fetch more to ensure we get at least 5 published ones
+      orderBy("createdAt", "desc")
     );
     const querySnapshot = await getDocs(moviesQuery);
     const movies = querySnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as Movie))
       .filter(movie => movie.isPublished)
-      .slice(0, 5);
     return movies;
   } catch (error) {
     console.error("Error fetching movies: ", error);
-    // This might fail if the composite index is not created yet.
-    // As a fallback, let's try fetching without ordering if the primary query fails.
     if ((error as any).code === 'failed-precondition') {
         console.warn("Query failed due to missing index. Falling back to fetching published movies without specific order.");
-        const fallbackQuery = query(collection(db, "movies"), where("isPublished", "==", true), limit(5));
+        const fallbackQuery = query(collection(db, "movies"), where("isPublished", "==", true), limit(10));
         const fallbackSnapshot = await getDocs(fallbackQuery);
         return fallbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Movie));
     }
@@ -63,25 +60,25 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
       <main className="flex-1">
-        <section className="relative h-[70vh] w-full text-white">
-          <div className="absolute inset-0 bg-black/50 z-10" />
+        <section className="relative h-[80vh] w-full text-white">
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
           <Image
             src={featuredMovie.thumbnailUrl}
             alt={featuredMovie.title}
             fill
-            className="object-cover"
+            className="object-cover object-top"
             priority
             data-ai-hint="movie scene"
           />
-          <div className="container relative z-20 flex h-full flex-col items-start justify-center text-left">
-            <h1 className="font-headline text-4xl font-bold drop-shadow-lg md:text-6xl">
+          <div className="container relative z-20 flex h-full flex-col items-start justify-end pb-20 text-left">
+            <h1 className="font-headline text-5xl font-extrabold drop-shadow-lg md:text-7xl">
               {featuredMovie.title}
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-gray-200 drop-shadow-md line-clamp-3">
+            <p className="mt-4 max-w-xl text-lg text-foreground/80 drop-shadow-md line-clamp-3">
               {featuredMovie.description}
             </p>
             <div className="mt-8">
-              <Button size="lg" asChild className="bg-accent hover:bg-accent/90">
+              <Button size="lg" asChild className="bg-accent text-accent-foreground hover:bg-accent/90 text-lg font-bold">
                 <Link href={`/movie/${featuredMovie.id}`}>
                   <PlayCircle className="mr-2 h-6 w-6" /> Үзэх
                 </Link>
@@ -93,11 +90,23 @@ export default async function Home() {
         {otherMovies.length > 0 && (
             <section className="container py-16">
             <h2 className="font-headline mb-8 text-3xl font-bold">Шинэ кинонууд</h2>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
                 {otherMovies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} />
+                  <CarouselItem key={movie.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                    <MovieCard movie={movie} />
+                  </CarouselItem>
                 ))}
-            </div>
+              </CarouselContent>
+              <CarouselPrevious className="ml-12" />
+              <CarouselNext className="mr-12"/>
+            </Carousel>
             </section>
         )}
       </main>

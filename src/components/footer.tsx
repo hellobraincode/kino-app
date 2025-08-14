@@ -3,10 +3,10 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background/80">
+    <footer className="border-t border-border/40 bg-background/95">
       <div className="container flex flex-col items-center justify-between gap-6 py-8 sm:flex-row">
         <div className="flex items-center gap-2">
-            <Film className="h-6 w-6 text-primary" />
+            <Film className="h-6 w-6 text-accent" />
             <span className="font-bold font-headline text-lg">Монгол Кино</span>
         </div>
         <p className="text-center text-sm text-muted-foreground">

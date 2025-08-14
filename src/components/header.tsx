@@ -32,10 +32,10 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center gap-2">
-          <Film className="h-7 w-7 text-primary" />
+          <Film className="h-7 w-7 text-accent" />
           <span className="hidden font-bold sm:inline-block font-headline text-xl">Монгол Кино</span>
         </Link>
         <nav className="hidden gap-6 md:flex">
@@ -106,7 +106,7 @@ export function Header() {
             <SheetContent side="left">
                 <div className="flex flex-col gap-4 py-4">
                 <Link href="/" className="mb-4 flex items-center gap-2">
-                    <Film className="h-7 w-7 text-primary" />
+                    <Film className="h-7 w-7 text-accent" />
                     <span className="font-bold font-headline text-xl">Монгол Кино</span>
                 </Link>
                 {navLinks.map(link => (

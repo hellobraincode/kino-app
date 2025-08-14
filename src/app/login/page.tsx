@@ -42,7 +42,7 @@ export default function LoginPage() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     setIsLoading(true);
     try {
       if (isLogin) {
@@ -86,11 +86,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Card className="w-full max-w-md shadow-2xl bg-secondary border-border/60">
         <CardHeader className="text-center">
           <Link href="/" className="mb-4 inline-flex justify-center">
-            <Film className="h-10 w-10 text-primary" />
+            <Film className="h-10 w-10 text-accent" />
           </Link>
           <CardTitle className="font-headline text-2xl">{isLogin ? 'Нэвтрэх' : 'Бүртгүүлэх'}</CardTitle>
           <CardDescription>

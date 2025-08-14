@@ -14,7 +14,7 @@ export default function AdminLayout({
         <Sidebar>
           <SidebarHeader>
             <Link href="/" className="flex items-center gap-2 font-bold text-lg text-primary">
-              <Tv />
+              <Tv className="text-accent"/>
               <span>Монгол Кино</span>
             </Link>
           </SidebarHeader>
