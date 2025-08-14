@@ -11,7 +11,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCQCVnBWzWYxtcahv_y4DeRtFxSuxJlAJk",
   authDomain: "kino-web-7d98c.firebaseapp.com",
   projectId: "kino-web-7d98c",
-  storageBucket: "kino-web-7d98c.appspot.com",
+  storageBucket: "kino-web-7d98c.firebasestorage.app",
   messagingSenderId: "350705885395",
   appId: "1:350705885395:web:d8bbaa96993dd2ee457426"
 };
