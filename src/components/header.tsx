@@ -57,7 +57,7 @@ export function Header() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.photoURL || ''} alt={user.email || ''} />
+                          <AvatarImage src={user.photoURL || undefined} alt={user.email || ''} />
                           <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
                         </Avatar>
                       </Button>
@@ -118,12 +118,26 @@ export function Header() {
                     {link.label}
                     </Link>
                 ))}
-                {isAdmin && (
+                 {isLoggedIn ? (
+                  <div className="flex flex-col gap-4">
+                    {isAdmin && (
+                        <Link
+                        href="/admin"
+                        className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                        Админ
+                        </Link>
+                    )}
+                    <Button onClick={signOut} variant="ghost" className="justify-start p-0 text-lg font-medium text-muted-foreground">
+                        Гарах
+                    </Button>
+                  </div>
+                ) : (
                     <Link
-                    href="/admin"
+                    href="/login"
                     className="text-lg font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
-                    Админ
+                    Нэвтрэх
                     </Link>
                 )}
                 </div>
